@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WebApiPlayground.Exceptions;
 using WebApiPlayground.Filters;
 using WebApiPlayground.Model;
 
@@ -30,6 +31,15 @@ namespace WebApiPlayground.Controllers
         {
             await DatabaseContextFactory.Seed(_dbContext, true);
             return Ok();
+        }
+
+        /**
+         * <summary>触发409异常。</summary>
+         */
+        [HttpPost("Exception/409Conflict")]
+        public void Trigger409Conflict()
+        {
+            throw new Http409ConflictException($"Demo Exception. Current action: {nameof(Trigger409Conflict)}");
         }
     }
 }

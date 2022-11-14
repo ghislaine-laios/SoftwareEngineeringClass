@@ -29,8 +29,5 @@ namespace WebApiPlayground.Model
         public ChatSession? Session { get; set; } // 问题的聊天会话
     }
 
-    public class Request
-    {
-        
-    }
+    public class QuestionFactory {}
 }

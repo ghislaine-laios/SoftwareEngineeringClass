@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using WebApiPlayground.Exceptions;
+using WebApiPlayground.Filters;
 using WebApiPlayground.Services;
 using WebApiPlayground.Model;
+using static WebApiPlayground.Controllers.QuestionsController;
 
 namespace WebApiPlayground.Controllers
 {
@@ -14,6 +18,7 @@ namespace WebApiPlayground.Controllers
     [ApiController]
     [Authorize]
     [Produces("application/json")]
+    [Transactional]
     public class QuestionsController : ControllerBase
     {
 
@@ -53,6 +58,16 @@ namespace WebApiPlayground.Controllers
         }
 
         /**
+         * <summary>获取待解决的问题列表。</summary>
+         * <remarks>该方法主要供助教使用。</remarks>
+         */
+        [HttpGet("Unsolved")]
+        public async Task<ActionResult<IList<Question>>> GetUnsolved()
+        {
+            return await _dbContext.Questions.Where(q => q.Status == Question.QuestionStatus.Waiting).ToListAsync();
+        }
+
+        /**
          * <summary>获取系统中的所有问题。</summary>
          * <remarks>该方法供审计人员使用。其他人调用此方法将返回未授权错误。</remarks>
          */
@@ -76,11 +91,52 @@ namespace WebApiPlayground.Controllers
          * <remarks>尽管问题一般由学生提出，其他人员有问题时也可以调用此方法提问。</remarks>
          */
         [HttpPost]
-        public async Task<IActionResult> PostQuestion(Question question)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        public async Task<ActionResult<Question>> PostQuestion([FromBody] PostQuestionBody question)
         {
-            _dbContext.Questions.Add(question);
+            var username = _userService.GetName(this);
+            var user = await _dbContext.Users.SingleAsync(u => u.Username == username);
+            var newQuestion = new QuestionFactory().CreateQuestion(question, user);
+            _dbContext.Questions.Add(newQuestion);
             await _dbContext.SaveChangesAsync();
-            return Ok();
+            return CreatedAtAction(nameof(Get), new {id=newQuestion.Id}, newQuestion);
+        }
+
+        /**
+         * <summary>接下一个问题。</summary>
+         * <remarks>助教调用此方法接下问题。</remarks>
+         * <returns>与此问题对应的聊天会话。</returns>
+         */
+        [HttpPost("{id:long}/Take")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult<ChatSession>> TakeQuestion(long id)
+        {
+            var question = await _dbContext.Questions.SingleAsync(q =>q.Id == id);
+            var username = _userService.GetName(this);
+            var user = await _dbContext.Users.SingleAsync(u => u.Username == username);
+            if (question.Status != Question.QuestionStatus.Waiting)
+                throw new Http409ConflictException($"The status of question isn't \"Waiting\".");
+            question.Status = Question.QuestionStatus.Solving;
+            question.Solver = user;
+            question.Session = new ChatSession() { Id = 0, Participants = new List<User>{ user, question.Sender } };
+            await _dbContext.SaveChangesAsync();
+            return question.Session;
+        }
+    }
+
+    public class PostQuestionBody
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+    }
+
+    internal static class PostQuestionBodyExtension
+    {
+        public static Question CreateQuestion(this QuestionFactory factory, PostQuestionBody questionBody, User sender)
+        {
+            return new Question()
+                { Title = questionBody.Title, Description = questionBody.Description, Id = 0, Sender = sender };
         }
     }
 }

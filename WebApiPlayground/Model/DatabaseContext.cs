@@ -53,6 +53,7 @@ namespace WebApiPlayground.Model
                 context.Messages.RemoveRange(context.Messages);
                 context.Questions.RemoveRange(context.Questions);
                 context.Metadata.RemoveRange(context.Metadata);
+                await context.SaveChangesAsync();
             }
             var seed = await context.Metadata.SingleOrDefaultAsync(m => m.Key == "seed");
             if (seed?.Value == "true") return;
