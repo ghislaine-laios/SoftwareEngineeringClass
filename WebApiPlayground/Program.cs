@@ -1,5 +1,5 @@
 using System.Reflection;
-using CSharpPlayground.model;
+using WebApiPlayground.Model;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore;
