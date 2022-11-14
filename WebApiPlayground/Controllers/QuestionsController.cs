@@ -15,23 +15,14 @@ namespace WebApiPlayground.Controllers
      * <summary>Handle the logic about questions.</summary>
      */
     [Route("api/[controller]")]
-    [ApiController]
     [Authorize]
-    [Produces("application/json")]
-    [Transactional]
-    public class QuestionsController : ControllerBase
+    public class QuestionsController : WithDbControllerBase
     {
-
-        private readonly IUserService _userService;
-        private readonly DatabaseContext _dbContext;
-
 #pragma warning disable CS1591
         public QuestionsController(IUserService userService, DatabaseContext dbContext)
+            : base(userService, dbContext)
         {
-            _userService = userService;
-            _dbContext = dbContext;
         }
-
 #pragma warning restore CS1591
         /**
          * <summary>获取目前用户提问的问题列表。</summary>
@@ -40,8 +31,8 @@ namespace WebApiPlayground.Controllers
         [HttpGet("MyAsk")]
         public async Task<ActionResult<IList<Question>>> GetMyAsk()
         {
-            var username = _userService.GetName(this);
-            return await _dbContext.Questions
+            var username = UserService.GetName(this);
+            return await DbContext.Questions
                 .Where(q => q.Sender.Username == username)
                 .ToListAsync();
         }
@@ -53,8 +44,8 @@ namespace WebApiPlayground.Controllers
         [HttpGet("SolvedByMe")]
         public async Task<ActionResult<IList<Question>>> GetSolvedByMe()
         {
-            var username = _userService.GetName(this);
-            return await _dbContext.Questions.Where(q => q.Solver!.Username == username).ToListAsync();
+            var username = UserService.GetName(this);
+            return await DbContext.Questions.Where(q => q.Solver!.Username == username).ToListAsync();
         }
 
         /**
@@ -64,7 +55,7 @@ namespace WebApiPlayground.Controllers
         [HttpGet("Unsolved")]
         public async Task<ActionResult<IList<Question>>> GetUnsolved()
         {
-            return await _dbContext.Questions.Where(q => q.Status == Question.QuestionStatus.Waiting).ToListAsync();
+            return await DbContext.Questions.Where(q => q.Status == Question.QuestionStatus.Waiting).ToListAsync();
         }
 
         /**
@@ -74,7 +65,7 @@ namespace WebApiPlayground.Controllers
         [HttpGet("All")]
         public async Task<ActionResult<IList<Question>>> GetAll()
         {
-            return await _dbContext.Questions.ToListAsync();
+            return await DbContext.Questions.ToListAsync();
         }
         /**
          * <summary>获取某个问题。</summary>
@@ -83,7 +74,7 @@ namespace WebApiPlayground.Controllers
         [HttpGet("{id:long}")]
         public async Task<ActionResult<Question>> Get(long id)
         {
-            return await _dbContext.Questions.SingleAsync(q => q.Id == id);
+            return await DbContext.Questions.SingleAsync(q => q.Id == id);
         }
 
         /**
@@ -94,12 +85,12 @@ namespace WebApiPlayground.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<ActionResult<Question>> PostQuestion([FromBody] PostQuestionBody question)
         {
-            var username = _userService.GetName(this);
-            var user = await _dbContext.Users.SingleAsync(u => u.Username == username);
+            var username = UserService.GetName(this);
+            var user = await DbContext.Users.SingleAsync(u => u.Username == username);
             var newQuestion = new QuestionFactory().CreateQuestion(question, user);
-            _dbContext.Questions.Add(newQuestion);
-            await _dbContext.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new {id=newQuestion.Id}, newQuestion);
+            DbContext.Questions.Add(newQuestion);
+            await DbContext.SaveChangesAsync();
+            return CreatedAtAction(nameof(Get), new { id = newQuestion.Id }, newQuestion);
         }
 
         /**
@@ -108,19 +99,20 @@ namespace WebApiPlayground.Controllers
          * <returns>与此问题对应的聊天会话。</returns>
          */
         [HttpPost("{id:long}/Take")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        //TODO: Add 201 support
+        //ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult<ChatSession>> TakeQuestion(long id)
         {
-            var question = await _dbContext.Questions.SingleAsync(q =>q.Id == id);
-            var username = _userService.GetName(this);
-            var user = await _dbContext.Users.SingleAsync(u => u.Username == username);
+            var question = await DbContext.Questions.SingleAsync(q => q.Id == id);
+            var username = UserService.GetName(this);
+            var user = await DbContext.Users.SingleAsync(u => u.Username == username);
             if (question.Status != Question.QuestionStatus.Waiting)
                 throw new Http409ConflictException($"The status of question isn't \"Waiting\".");
             question.Status = Question.QuestionStatus.Solving;
             question.Solver = user;
-            question.Session = new ChatSession() { Id = 0, Participants = new List<User>{ user, question.Sender } };
-            await _dbContext.SaveChangesAsync();
+            question.Session = new ChatSession() { Id = 0, Participants = new List<User> { user, question.Sender } };
+            await DbContext.SaveChangesAsync();
             return question.Session;
         }
     }
@@ -136,7 +128,7 @@ namespace WebApiPlayground.Controllers
         public static Question CreateQuestion(this QuestionFactory factory, PostQuestionBody questionBody, User sender)
         {
             return new Question()
-                { Title = questionBody.Title, Description = questionBody.Description, Id = 0, Sender = sender };
+            { Title = questionBody.Title, Description = questionBody.Description, Id = 0, Sender = sender };
         }
     }
 }

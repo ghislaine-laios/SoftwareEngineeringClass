@@ -27,8 +27,7 @@ namespace WebApiPlayground.Model
             modelBuilder.Entity<Question>().Navigation(q => q.Sender).AutoInclude();
             modelBuilder.Entity<Question>().Navigation(q => q.Solver).AutoInclude();
             modelBuilder.Entity<Question>().Navigation(q => q.Session).AutoInclude();
-
-
+            modelBuilder.Entity<ChatSession>().Navigation(cs => cs.Participants).AutoInclude();
         }
     }
 
