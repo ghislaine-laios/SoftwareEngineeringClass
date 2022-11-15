@@ -22,6 +22,8 @@ namespace WebApiPlayground.Model
         
         // Relations
         public long SenderId { get; set; }
+
+        public long ChatSessionId { get; set; }
     }
 
     /**

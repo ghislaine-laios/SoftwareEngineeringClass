@@ -111,9 +111,14 @@ namespace WebApiPlayground.Controllers
             return ChatSessionResponse.From(session);
         }
 
+        /**
+         * <summary>创建一条新信息。</summary>
+         */
         [HttpPost("{id:long}/NewMessage")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<ActionResult> CreateMessage(long id, [FromBody] MessagePayload messagePayload)
         {
+            CheckMessagePayload(messagePayload);
             var (user, chatSession) = await GetUserAndChatSession(id);
             CheckSessionAuthority(chatSession, user);
             chatSession.LastId++;
@@ -123,12 +128,18 @@ namespace WebApiPlayground.Controllers
             return CreatedAtAction(nameof(GetMessage), MessageResponse.From(message));
         }
 
+        /**
+         * <summary>获取某条信息。</summary>
+         */
         [HttpGet("{id:long}/Messages/{messageId:long}")]
         public async Task<MessageResponse> GetMessage(long id, long messageId)
         {
             var (user, chatSession) = await GetUserAndChatSession(id);
             CheckSessionAuthority(chatSession, user);
-            return new MessageResponse();
+            var messageResult = await DbContext.Messages
+                .Where(m => m.ChatSessionId == chatSession.Id && m.IdPerChat == messageId).ToListAsync();
+            if (messageResult.Count != 1) throw new Http404NotFoundException("Message is not found.");
+            return MessageResponse.From(messageResult[0]);
         }
 
         private async Task<(User, ChatSession)> GetUserAndChatSession(long sessionId)
@@ -145,7 +156,7 @@ namespace WebApiPlayground.Controllers
                     "Current user can't get this session, because it doesn't participant in it.");
         }
 
-        private static void CheckMessageSentTime(MessagePayload message)
+        private static void CheckMessagePayload(MessageBase message)
         {
             if (message.SentTime > DateTime.Now)
                 throw new Http400BadRequestException("The message can't be sent later than now.");

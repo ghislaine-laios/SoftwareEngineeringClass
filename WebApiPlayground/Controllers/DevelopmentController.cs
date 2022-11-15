@@ -50,6 +50,7 @@ namespace WebApiPlayground.Controllers
         {
             var user = await context.Users.SingleAsync(user => user.Username == "user-12");
             var c1 = await context.ChatSessions.Include(cs => cs.Participants).Where(cs => cs.Participants.Contains(user)).ToListAsync();
+            var now = DateTime.UtcNow;
             return;
         }
     }

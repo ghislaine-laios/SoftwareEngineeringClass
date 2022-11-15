@@ -98,13 +98,10 @@ namespace WebApiPlayground.Controllers
          * <returns>与此问题对应的聊天会话。</returns>
          */
         [HttpPost("{id:long}/Take")]
-        //TODO: Add 201 support
-        //ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult<ChatSession>> TakeQuestion(long id)
         {
-            var question = await DbContext.Questions.SingleAsync(q => q.Id == id);
-            var user = await UserService.GetUser(this);
+            var (question, user) = await GetQuestionsAndUser(id);
             if (question.Status != Question.QuestionStatus.Waiting)
                 throw new Http409ConflictException($"The status of question isn't \"Waiting\".");
             question.Status = Question.QuestionStatus.Solving;
@@ -113,6 +110,28 @@ namespace WebApiPlayground.Controllers
             await DbContext.SaveChangesAsync();
             return question.Session;
         }
+
+        /**
+         * <summary>将某个问题标记为已解决。</summary>
+         */
+        [HttpPost("{id:long}/Solve")]
+        public async Task SolvedQuestion(long id)
+        {
+            var (question, user) = await GetQuestionsAndUser(id);
+            if (question.Sender != user && question.Solver != user) throw new Http403ForbiddenException("Current user doesn't have enough permission to solve this question.");
+            if (question.Status != Question.QuestionStatus.Solving)
+                throw new Http409ConflictException($"The status of question isn't \"Solving\"");
+            question.Status = Question.QuestionStatus.Solved;
+            await DbContext.SaveChangesAsync();
+        }
+
+        private async Task<(Question, User)> GetQuestionsAndUser(long id)
+        {
+            var question = await DbContext.Questions.SingleAsync(q => q.Id == id);
+            var user = await UserService.GetUser(this);
+            return (question, user);
+        }
+
     }
 
     public class PostQuestionBody
