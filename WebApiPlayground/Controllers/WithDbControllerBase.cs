@@ -16,7 +16,7 @@ namespace WebApiPlayground.Controllers
     {
 #pragma warning disable CS1591
         protected readonly IUserService UserService;
-        protected readonly DatabaseContext DbContext;
+        public DatabaseContext DbContext { get; }
 
         public WithDbControllerBase(IUserService userService, DatabaseContext dbContext)
         {

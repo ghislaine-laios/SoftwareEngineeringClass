@@ -8,15 +8,18 @@ using System.Threading.Tasks;
 
 namespace WebApiPlayground.Model
 {
+    public class UserBase
+    {
+        public long Id { get; set; }
+        public string Username { get; set; }
+        public string Nickname { get; set; }
+    }
+
     /**
      * 用户实体的定义
      */
-    public class User
+    public class User: UserBase
     {
-        public int Id { get; set; }
-        public string Username { get; set; }
-        public string Nickname { get; set; }
-        
         // Relations
         public IList<ChatSession> ChatSessions { get; set; }
     }

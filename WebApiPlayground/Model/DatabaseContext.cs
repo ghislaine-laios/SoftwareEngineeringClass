@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +28,6 @@ namespace WebApiPlayground.Model
             modelBuilder.Entity<Question>().Navigation(q => q.Sender).AutoInclude();
             modelBuilder.Entity<Question>().Navigation(q => q.Solver).AutoInclude();
             modelBuilder.Entity<Question>().Navigation(q => q.Session).AutoInclude();
-            modelBuilder.Entity<ChatSession>().Navigation(cs => cs.Participants).AutoInclude();
         }
     }
 
@@ -65,14 +65,24 @@ namespace WebApiPlayground.Model
             context.Users.AddRange(users);
             var chatSessions = new ChatSession[]
             {
-                new() { Participants = new List<User>() { users[0], users[2] } },
-                new() { Participants = new List<User>() { users[1], users[2] } }
+                new() { Participants = new List<User>() { users[0], users[2] }, LastId = 2 },
+                new() { Participants = new List<User>() { users[1], users[2] }, LastId = 0 }
             };
             chatSessions[0].Messages = new List<Message>()
             {
-                new() {Content = "Hello!", Sender = users[0] },
-                new() { Content = "Hello! What's your question?", Sender = users[2] }
+                new() { Content = "Hello!", Sender = users[0], SentTime = DateTime.Parse("08/16/2013 12:00 AM"), IdPerChat = 1},
+                new()
+                {
+                    Content = "Hello! What's your question?", Sender = users[2],
+                    SentTime = DateTime.Parse("08/16/2013 1:00 PM"),
+                    IdPerChat = 2
+                }
             };
+
+            foreach (var message in chatSessions[0].Messages)
+            {
+                message.SentTime = DateTime.SpecifyKind(message.SentTime, DateTimeKind.Utc);
+            }
 
             var questions = new Question[]
             {

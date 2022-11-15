@@ -85,8 +85,7 @@ namespace WebApiPlayground.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<ActionResult<Question>> PostQuestion([FromBody] PostQuestionBody question)
         {
-            var username = UserService.GetName(this);
-            var user = await DbContext.Users.SingleAsync(u => u.Username == username);
+            var user = await UserService.GetUser(this);
             var newQuestion = new QuestionFactory().CreateQuestion(question, user);
             DbContext.Questions.Add(newQuestion);
             await DbContext.SaveChangesAsync();
@@ -105,8 +104,7 @@ namespace WebApiPlayground.Controllers
         public async Task<ActionResult<ChatSession>> TakeQuestion(long id)
         {
             var question = await DbContext.Questions.SingleAsync(q => q.Id == id);
-            var username = UserService.GetName(this);
-            var user = await DbContext.Users.SingleAsync(u => u.Username == username);
+            var user = await UserService.GetUser(this);
             if (question.Status != Question.QuestionStatus.Waiting)
                 throw new Http409ConflictException($"The status of question isn't \"Waiting\".");
             question.Status = Question.QuestionStatus.Solving;

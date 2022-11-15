@@ -15,7 +15,9 @@ namespace WebApiPlayground.Filters
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             Trace.WriteLine("In transaction.");
-            using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+            var options = new TransactionOptions() { IsolationLevel = IsolationLevel.RepeatableRead };
+            using var transactionScope = new TransactionScope(TransactionScopeOption.Required, options,
+                TransactionScopeAsyncFlowOption.Enabled);
             var actionExecutedContext = await next();
             //if no exception were thrown
             if (actionExecutedContext.Exception == null)

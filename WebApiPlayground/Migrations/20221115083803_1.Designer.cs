@@ -12,7 +12,7 @@ using WebApiPlayground.Model;
 namespace WebApiPlayground.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20221114025115_1")]
+    [Migration("20221115083803_1")]
     partial class _1
     {
         /// <inheritdoc />
@@ -31,8 +31,8 @@ namespace WebApiPlayground.Migrations
                     b.Property<long>("ChatSessionsId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("ParticipantsId")
-                        .HasColumnType("integer");
+                    b.Property<long>("ParticipantsId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("ChatSessionsId", "ParticipantsId");
 
@@ -41,7 +41,7 @@ namespace WebApiPlayground.Migrations
                     b.ToTable("ChatSessionUser", "QuestioningModule");
                 });
 
-            modelBuilder.Entity("WebApiPlayground.model.ChatSession", b =>
+            modelBuilder.Entity("WebApiPlayground.Model.ChatSession", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -49,12 +49,15 @@ namespace WebApiPlayground.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long>("LastId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
                     b.ToTable("ChatSessions", "QuestioningModule");
                 });
 
-            modelBuilder.Entity("WebApiPlayground.model.Message", b =>
+            modelBuilder.Entity("WebApiPlayground.Model.Message", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -69,8 +72,14 @@ namespace WebApiPlayground.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("SenderId")
-                        .HasColumnType("integer");
+                    b.Property<long>("IdPerChat")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SenderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("SentTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -81,7 +90,7 @@ namespace WebApiPlayground.Migrations
                     b.ToTable("Messages", "QuestioningModule");
                 });
 
-            modelBuilder.Entity("WebApiPlayground.model.Metadata", b =>
+            modelBuilder.Entity("WebApiPlayground.Model.Metadata", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -102,7 +111,7 @@ namespace WebApiPlayground.Migrations
                     b.ToTable("Metadata", "QuestioningModule");
                 });
 
-            modelBuilder.Entity("WebApiPlayground.model.Question", b =>
+            modelBuilder.Entity("WebApiPlayground.Model.Question", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -114,14 +123,14 @@ namespace WebApiPlayground.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("SenderId")
-                        .HasColumnType("integer");
+                    b.Property<long>("SenderId")
+                        .HasColumnType("bigint");
 
                     b.Property<long?>("SessionId")
                         .HasColumnType("bigint");
 
-                    b.Property<int?>("SolverId")
-                        .HasColumnType("integer");
+                    b.Property<long?>("SolverId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -141,13 +150,13 @@ namespace WebApiPlayground.Migrations
                     b.ToTable("Questions", "QuestioningModule");
                 });
 
-            modelBuilder.Entity("WebApiPlayground.model.User", b =>
+            modelBuilder.Entity("WebApiPlayground.Model.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Nickname")
                         .IsRequired()
@@ -164,26 +173,26 @@ namespace WebApiPlayground.Migrations
 
             modelBuilder.Entity("ChatSessionUser", b =>
                 {
-                    b.HasOne("WebApiPlayground.model.ChatSession", null)
+                    b.HasOne("WebApiPlayground.Model.ChatSession", null)
                         .WithMany()
                         .HasForeignKey("ChatSessionsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WebApiPlayground.model.User", null)
+                    b.HasOne("WebApiPlayground.Model.User", null)
                         .WithMany()
                         .HasForeignKey("ParticipantsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("WebApiPlayground.model.Message", b =>
+            modelBuilder.Entity("WebApiPlayground.Model.Message", b =>
                 {
-                    b.HasOne("WebApiPlayground.model.ChatSession", null)
+                    b.HasOne("WebApiPlayground.Model.ChatSession", null)
                         .WithMany("Messages")
                         .HasForeignKey("ChatSessionId");
 
-                    b.HasOne("WebApiPlayground.model.User", "Sender")
+                    b.HasOne("WebApiPlayground.Model.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -192,19 +201,19 @@ namespace WebApiPlayground.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("WebApiPlayground.model.Question", b =>
+            modelBuilder.Entity("WebApiPlayground.Model.Question", b =>
                 {
-                    b.HasOne("WebApiPlayground.model.User", "Sender")
+                    b.HasOne("WebApiPlayground.Model.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WebApiPlayground.model.ChatSession", "Session")
+                    b.HasOne("WebApiPlayground.Model.ChatSession", "Session")
                         .WithMany()
                         .HasForeignKey("SessionId");
 
-                    b.HasOne("WebApiPlayground.model.User", "Solver")
+                    b.HasOne("WebApiPlayground.Model.User", "Solver")
                         .WithMany()
                         .HasForeignKey("SolverId");
 
@@ -215,7 +224,7 @@ namespace WebApiPlayground.Migrations
                     b.Navigation("Solver");
                 });
 
-            modelBuilder.Entity("WebApiPlayground.model.ChatSession", b =>
+            modelBuilder.Entity("WebApiPlayground.Model.ChatSession", b =>
                 {
                     b.Navigation("Messages");
                 });

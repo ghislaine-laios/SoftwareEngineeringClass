@@ -15,6 +15,8 @@ namespace WebApiPlayground.Model
     {
         public long Id { get; set; }
 
+        public long LastId { get; set; }
+
         // Relations
         public IList<User> Participants { get; set; }
         public IList<Message> Messages { get; set; }

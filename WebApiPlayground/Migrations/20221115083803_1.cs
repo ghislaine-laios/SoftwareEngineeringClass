@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -20,7 +21,8 @@ namespace WebApiPlayground.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    LastId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -47,7 +49,7 @@ namespace WebApiPlayground.Migrations
                 schema: "QuestioningModule",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Username = table.Column<string>(type: "text", nullable: false),
                     Nickname = table.Column<string>(type: "text", nullable: false)
@@ -63,7 +65,7 @@ namespace WebApiPlayground.Migrations
                 columns: table => new
                 {
                     ChatSessionsId = table.Column<long>(type: "bigint", nullable: false),
-                    ParticipantsId = table.Column<int>(type: "integer", nullable: false)
+                    ParticipantsId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -91,9 +93,11 @@ namespace WebApiPlayground.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChatSessionId = table.Column<long>(type: "bigint", nullable: true),
                     Content = table.Column<string>(type: "text", nullable: false),
-                    SenderId = table.Column<int>(type: "integer", nullable: false),
-                    ChatSessionId = table.Column<long>(type: "bigint", nullable: true)
+                    SentTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IdPerChat = table.Column<long>(type: "bigint", nullable: false),
+                    SenderId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -123,8 +127,8 @@ namespace WebApiPlayground.Migrations
                     Title = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    SenderId = table.Column<int>(type: "integer", nullable: false),
-                    SolverId = table.Column<int>(type: "integer", nullable: true),
+                    SenderId = table.Column<long>(type: "bigint", nullable: false),
+                    SolverId = table.Column<long>(type: "bigint", nullable: true),
                     SessionId = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>

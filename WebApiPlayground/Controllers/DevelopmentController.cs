@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebApiPlayground.Exceptions;
 using WebApiPlayground.Filters;
 using WebApiPlayground.Model;
+using WebApiPlayground.Services;
 
 namespace WebApiPlayground.Controllers
 {
@@ -40,6 +43,14 @@ namespace WebApiPlayground.Controllers
         public void Trigger409Conflict()
         {
             throw new Http409ConflictException($"Demo Exception. Current action: {nameof(Trigger409Conflict)}");
+        }
+
+        [HttpPost("DebugDbContext")]
+        public async Task DebugDbContext(DatabaseContext context)
+        {
+            var user = await context.Users.SingleAsync(user => user.Username == "user-12");
+            var c1 = await context.ChatSessions.Include(cs => cs.Participants).Where(cs => cs.Participants.Contains(user)).ToListAsync();
+            return;
         }
     }
 }
