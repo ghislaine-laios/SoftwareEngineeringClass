@@ -86,10 +86,10 @@ namespace WebApiPlayground.Model
 
             var questions = new Question[]
             {
-                new() { Title = "Demo Question 1", Description = "This is a demo question.", Sender = users[0], Status = Question.QuestionStatus.Waiting },
-                new() { Title = "Demo Question 2", Description = "This is a demo question(2).", Sender = users[0], Status = Question.QuestionStatus.Solving,
+                new() { Title = "Demo Question 1", Description = "This is a demo question.", Sender = users[0], Status = QuestionStatus.Waiting },
+                new() { Title = "Demo Question 2", Description = "This is a demo question(2).", Sender = users[0], Status = QuestionStatus.Solving,
                     Solver = users[2], Session = chatSessions[0] },
-                new() { Title = "Solved Question 3", Description = "This is a demo question(3)", Sender = users[1], Status = Question.QuestionStatus.Solved,
+                new() { Title = "Solved Question 3", Description = "This is a demo question(3)", Sender = users[1], Status = QuestionStatus.Solved,
                     Solver = users[2], Session = chatSessions[1] }
             };
             context.Questions.AddRange(questions);

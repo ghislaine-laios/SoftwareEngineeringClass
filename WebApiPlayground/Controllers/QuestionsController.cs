@@ -55,7 +55,7 @@ namespace WebApiPlayground.Controllers
         [HttpGet("Unsolved")]
         public async Task<ActionResult<IList<Question>>> GetUnsolved()
         {
-            return await DbContext.Questions.Where(q => q.Status == Question.QuestionStatus.Waiting).ToListAsync();
+            return await DbContext.Questions.Where(q => q.Status == QuestionStatus.Waiting).ToListAsync();
         }
 
         /**
@@ -102,9 +102,9 @@ namespace WebApiPlayground.Controllers
         public async Task<ActionResult<ChatSession>> TakeQuestion(long id)
         {
             var (question, user) = await GetQuestionsAndUser(id);
-            if (question.Status != Question.QuestionStatus.Waiting)
+            if (question.Status != QuestionStatus.Waiting)
                 throw new Http409ConflictException($"The status of question isn't \"Waiting\".");
-            question.Status = Question.QuestionStatus.Solving;
+            question.Status = QuestionStatus.Solving;
             question.Solver = user;
             question.Session = new ChatSession() { Id = 0, Participants = new List<User> { user, question.Sender } };
             await DbContext.SaveChangesAsync();
@@ -119,9 +119,9 @@ namespace WebApiPlayground.Controllers
         {
             var (question, user) = await GetQuestionsAndUser(id);
             if (question.Sender != user && question.Solver != user) throw new Http403ForbiddenException("Current user doesn't have enough permission to solve this question.");
-            if (question.Status != Question.QuestionStatus.Solving)
+            if (question.Status != QuestionStatus.Solving)
                 throw new Http409ConflictException($"The status of question isn't \"Solving\"");
-            question.Status = Question.QuestionStatus.Solved;
+            question.Status = QuestionStatus.Solved;
             await DbContext.SaveChangesAsync();
         }
 
